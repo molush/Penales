@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reyes del Penal - Versión Mejorada</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #228B22;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        #game {
+            margin-top: 20px;
+        }
+        #goal {
+            position: relative;
+            width: 400px;
+            height: 200px;
+            margin: 20px auto;
+            background: white;
+            border: 5px solid black;
+        }
+        #goalkeeper {
+            position: absolute;
+            bottom: 0;
+            width: 80px;
+            height: 80px;
+            background: blue;
+            border-radius: 50%;
+            left: 160px;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 24px;
+        }
+        canvas {
+            border: 2px solid black;
+            background-color: white;
+        }
+        #scoreboard {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Reyes del Penal - Apunta y Dispara</h1>
+
+<div id="game">
+    <h2>Elige tu equipo</h2>
+    <select id="teamSelect">
+        <option value="Real Madrid">Real Madrid</option>
+        <option value="Barcelona">Barcelona</option>
+        <option value="Atlético de Madrid">Atlético de Madrid</option>
+        <option value="PSG">PSG</option>
+        <option value="Manchester City">Manchester City</option>
+        <option value="Bayern Munich">Bayern Munich</option>
+    </select>
+    <br>
+    <button onclick="startGame()">Comenzar Partido</button>
+</div>
+
+<div id="penaltyArea" style="display:none;">
+    <h2 id="currentMatch"></h2>
+    <p>Haz clic en la portería para disparar</p>
+    <canvas id="goalCanvas" width="400" height="200"></canvas>
+    <div id="result"></div>
+    <div id="scoreboard">
+        <p>Goles anotados: <span id="goals">0</span></p>
+        <p>Penales restantes: <span id="shotsLeft">5</span></p>
+    </div>
+</div>
+
+<script>
+    let selectedTeam = "";
+    let goals = 0;
+    let shots = 5;
+    let rivals = ["Real Madrid", "Barcelona", "Atlético de Madrid", "PSG", "Manchester City", "Bayern Munich"];
+    let goalkeeperX = 160;
+    let goalkeeperWidth = 80;
+    let goalkeeperHeight = 80;
+
+    function startGame() {
+        selectedTeam = document.getElementById("teamSelect").value;
+        goals = 0;
+        shots = 5;
+        document.getElementById("game").style.display = "none";
+        document.getElementById("penaltyArea").style.display = "block";
+        pickRival();
+        updateScore();
+        drawGoal();
+    }
+
+    function pickRival() {
+        let rivalOptions = rivals.filter(team => team !== selectedTeam);
+        let rival = rivalOptions[Math.floor(Math.random() * rivalOptions.length)];
+        document.getElementById("currentMatch").innerText = selectedTeam + " vs " + rival;
+    }
+
+    function drawGoal() {
+        const canvas = document.getElementById("goalCanvas");
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Dibujar portería
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 5;
+        ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+        // Dibujar portero
+        ctx.fillStyle = "blue";
+        ctx.fillRect(goalkeeperX, canvas.height - goalkeeperHeight, goalkeeperWidth, goalkeeperHeight);
+    }
+
+    function updateScore() {
+        document.getElementById("goals").innerText = goals;
+        document.getElementById("shotsLeft").innerText = shots;
+    }
+
+    function endGame() {
+        setTimeout(() => {
+            alert("Partido terminado. Anotaste " + goals + " goles.");
+            location.reload();
+        }, 1000);
+    }
+
+    document.getElementById("goalCanvas").addEventListener("click", function(event) {
+        if (shots > 0) {
+            const rect = this.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+
+            // Revisar si el tiro cae donde está el portero
+            if (x > goalkeeperX && x < (goalkeeperX + goalkeeperWidth) && y > (200 - goalkeeperHeight)) {
+                document.getElementById("result").innerHTML = "<div class='miss'>¡Atajado por el portero!</div>";
+            } else {
+                document.getElementById("result").innerHTML = "<div class='goal'>¡GOOOOOOL!</div>";
+                goals++;
+            }
+
+            shots--;
+            updateScore();
+            moveGoalkeeper();
+            drawGoal();
+
+            if (shots == 0) {
+                endGame();
+            }
+        }
+    });
+
+    function moveGoalkeeper() {
+        // Movimiento aleatorio del portero
+        goalkeeperX = Math.floor(Math.random() * (400 - goalkeeperWidth));
+    }
+</script>
+
+</body>
+</html>
